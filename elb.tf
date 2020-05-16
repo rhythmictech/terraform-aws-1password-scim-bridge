@@ -20,7 +20,7 @@ resource "aws_security_group_rule" "elb_allow_ingress" {
   protocol          = "tcp"
   security_group_id = aws_security_group.elb.id
   to_port           = 443
-  type              = "egress"
+  type              = "ingress"
 }
 
 resource "aws_security_group_rule" "elb_allow_this" {
