@@ -23,7 +23,7 @@ resource "aws_security_group_rule" "elb_allow_ingress" {
   type              = "ingress"
 }
 
-resource "aws_security_group_rule" "elb_allow_this" {
+resource "aws_security_group_rule" "elb_allow_egress" {
   from_port                = var.scim_port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.elb.id
