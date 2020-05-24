@@ -24,12 +24,12 @@ resource "aws_security_group_rule" "elb_allow_ingress" {
 }
 
 resource "aws_security_group_rule" "elb_allow_this" {
-  from_port                 = var.scim_port
-  protocol                  = "tcp"
-  security_group_id         = aws_security_group.elb.id
+  from_port                = var.scim_port
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.elb.id
   source_security_group_id = aws_security_group.this.id
-  to_port                   = var.scim_port
-  type                      = "egress"
+  to_port                  = var.scim_port
+  type                     = "egress"
 }
 
 resource "aws_lb" "this" {

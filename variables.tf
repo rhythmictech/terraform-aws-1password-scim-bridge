@@ -8,12 +8,6 @@ variable "name" {
   type        = string
 }
 
-variable "certificate_arn" {
-  description = "ARN of ACM Certificate to use for ELB"
-  type        = string
-}
-
-
 variable "scim_host_name" {
   description = "Fully qualified host name (e.g., prod-1password-scim.mycompany.io)"
   type        = string
@@ -59,7 +53,6 @@ variable "asg_keypair" {
   type        = string
 }
 
-
 variable "asg_max_size" {
   default     = 2
   description = "Maximum number of instances in the autoscaling group"
@@ -86,6 +79,11 @@ variable "access_log_prefix" {
   type        = string
 }
 
+variable "certificate_arn" {
+  description = "ARN of ACM Certificate to use for ELB"
+  type        = string
+}
+
 variable "private_subnets" {
   description = "Private subnets to associate SCIM instances with (specify 1 or more)"
   type        = list(string)
@@ -96,19 +94,20 @@ variable "public_subnets" {
   type        = list(string)
 }
 
-variable "vpc_id" {
-  description = "VPC ID"
+variable "route53_zone_id" {
+  description = "Zone ID to register Route53 entry in"
   type        = string
 }
 
-variable "route53_zone_id" {
-  description = "Zone ID to register Route53 entry in"
+variable "vpc_id" {
+  description = "VPC ID"
   type        = string
 }
 
 ########################################
 # SCIM Vars (these shouldn't need set)
 ########################################
+
 variable "scim_cache_dns_name" {
   default     = "localhost"
   description = "Redis cache DNS name (this changes the port SCIM tries to reach redis on but does not change the address redis listens on)"
@@ -120,7 +119,6 @@ variable "scim_cache_port" {
   description = "Redis cache port (this changes the port SCIM tries to reach redis on but does not change the port redis listens on)"
   type        = string
 }
-
 
 variable "scim_group" {
   default     = "nogroup"
