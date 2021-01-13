@@ -1,5 +1,13 @@
+locals {
+  logging = var.access_log_bucket == null ? [] : [{
+    bucket = var.access_log_bucket
+    prefix = var.access_log_prefix
+  }]
+}
+
 resource "aws_security_group" "elb" {
   name_prefix = "${var.name}-elb-sg"
+  description = "SCIM ELB SG"
   vpc_id      = var.vpc_id
 
   tags = merge(
@@ -15,7 +23,8 @@ resource "aws_security_group" "elb" {
 }
 
 resource "aws_security_group_rule" "elb_allow_ingress" {
-  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "Allow access to the ELB (needs to be reachable by the SSO provider)"
+  cidr_blocks       = var.elb_allowed_cidrs #tfsec:ignore:AWS006
   from_port         = 443
   protocol          = "tcp"
   security_group_id = aws_security_group.elb.id
@@ -24,6 +33,7 @@ resource "aws_security_group_rule" "elb_allow_ingress" {
 }
 
 resource "aws_security_group_rule" "elb_allow_egress" {
+  description              = "Allow the ELB to talk to the SCIM instance"
   from_port                = var.scim_port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.elb.id
@@ -35,11 +45,22 @@ resource "aws_security_group_rule" "elb_allow_egress" {
 resource "aws_lb" "this" {
   name_prefix                      = substr(var.name, 0, 6)
   enable_cross_zone_load_balancing = true
-  internal                         = false
+  internal                         = false #tfsec:ignore:AWS005
   load_balancer_type               = "application"
   security_groups                  = [aws_security_group.elb.id]
   subnets                          = var.public_subnets
   tags                             = var.tags
+
+  dynamic "access_logs" {
+    iterator = log
+    for_each = local.logging
+
+    content {
+      bucket  = log.value.bucket
+      prefix  = lookup(log.value, "prefix", null)
+      enabled = true
+    }
+  }
 }
 
 resource "aws_lb_listener" "this" {

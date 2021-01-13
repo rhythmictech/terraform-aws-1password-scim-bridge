@@ -29,10 +29,34 @@ variable "tags" {
 # ASG/Instance Vars
 ########################################
 
+variable "ami_id" {
+  default     = null
+  description = "AMI to build on (must be Ubuntu, `ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*` used if this is null)"
+  type        = string
+}
+
+variable "asg_additional_iam_policies" {
+  default     = []
+  description = "Additional IAM policies to attach to the  ASG instance profile"
+  type        = list(string)
+}
+
 variable "asg_additional_security_groups" {
   default     = []
   description = "Additional security group IDs to attach to ASG instances"
   type        = list(string)
+}
+
+variable "asg_additional_user_data" {
+  default     = ""
+  description = "Additional User Data to attach to the launch template"
+  type        = string
+}
+
+variable "asg_allow_outbound_egress" {
+  default     = true
+  description = "whether or not the default SG should allow outbound egress"
+  type        = bool
 }
 
 variable "asg_desired_capacity" {
@@ -82,6 +106,12 @@ variable "access_log_prefix" {
 variable "certificate_arn" {
   description = "ARN of ACM Certificate to use for ELB"
   type        = string
+}
+
+variable "elb_allowed_cidrs" {
+  default     = ["0.0.0.0/0"]
+  description = "List of CIDRs that can reach the ELB (must be reachable by the SSO provider)"
+  type        = list(string)
 }
 
 variable "private_subnets" {
