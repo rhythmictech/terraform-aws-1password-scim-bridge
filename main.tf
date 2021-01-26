@@ -10,6 +10,7 @@ locals {
 
 resource "aws_security_group" "this" {
   name_prefix = "${var.name}-scim-sg"
+  description = "SCIM instance SG"
   vpc_id      = var.vpc_id
 
   tags = merge(
@@ -24,9 +25,10 @@ resource "aws_security_group" "this" {
   }
 }
 
-# TODO this shouldn't need unlimited outbound
 resource "aws_security_group_rule" "this_allow_egress" {
-  cidr_blocks       = ["0.0.0.0/0"]
+  count             = var.asg_allow_outbound_egress ? 1 : 0
+  cidr_blocks       = ["0.0.0.0/0"] #tfsec:ignore:AWS007
+  description       = "Allow outbound egress"
   from_port         = 0
   protocol          = "-1"
   security_group_id = aws_security_group.this.id
@@ -35,6 +37,7 @@ resource "aws_security_group_rule" "this_allow_egress" {
 }
 
 resource "aws_security_group_rule" "this_allow_elb" {
+  description              = "Allow ELB to reach SCIM port"
   from_port                = var.scim_port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.this.id
@@ -72,6 +75,19 @@ data "template_file" "this" {
     SCIM_SESSION_PATH   = var.scim_session_path
     SCIM_SESSION_SECRET = var.scim_secret_name
     SCIM_REPO           = var.scim_repo
+  }
+}
+
+data "template_cloudinit_config" "this" {
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = data.template_file.this.rendered
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = var.asg_additional_user_data
   }
 }
 
@@ -113,10 +129,10 @@ resource "aws_launch_configuration" "this" {
   name_prefix                 = var.name
   associate_public_ip_address = false
   iam_instance_profile        = aws_iam_instance_profile.this.id
-  image_id                    = data.aws_ami.this.id
+  image_id                    = coalesce(var.ami_id, data.aws_ami.this.id)
   instance_type               = var.asg_instance_type
   key_name                    = var.asg_keypair
-  user_data                   = data.template_file.this.rendered
+  user_data_base64            = data.template_cloudinit_config.this.rendered
 
   security_groups = concat(
     var.asg_additional_security_groups,

@@ -38,7 +38,7 @@ apt:
 package_upgrade: true
 
 # install some optional & required packages
-packages: 
+packages:
     - apt-transport-https
     - ca-certificates
     - ec2-instance-connect
